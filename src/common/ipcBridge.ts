@@ -205,6 +205,58 @@ export const document = {
   convert: bridge.buildProvider<import('./types/conversion').DocumentConversionResponse, import('./types/conversion').DocumentConversionRequest>('document.convert'),
 };
 
+// ── Plugin System IPC Bridge ─────────────────────────────────────────────────
+// Exposes plugin management operations from the main process to the renderer.
+// Mirrors the channels defined in src/plugin/bridge/pluginBridge.ts
+
+export interface PluginRegistryEntry {
+  id: string;
+  name: string;
+  version: string;
+  description?: string;
+  author?: string;
+  homepage?: string;
+  source: 'npm' | 'github' | 'local' | 'builtin';
+  installPath?: string;
+  state: 'pending' | 'active' | 'inactive' | 'error';
+  error?: string;
+  permissions?: string[];
+  grantedPermissions?: string[];
+  settings?: Record<string, unknown>;
+  installedAt?: number;
+  updatedAt?: number;
+}
+
+export const plugin = {
+  // Query operations
+  list: bridge.buildProvider<IBridgeResponse<PluginRegistryEntry[]>, void>('plugin:list'),
+  get: bridge.buildProvider<IBridgeResponse<PluginRegistryEntry | undefined>, string>('plugin:get'),
+  listActive: bridge.buildProvider<IBridgeResponse<PluginRegistryEntry[]>, void>('plugin:list-active'),
+
+  // Installation operations
+  installNpm: bridge.buildProvider<IBridgeResponse<{ pluginId: string }>, { packageName: string; version?: string }>('plugin:install-npm'),
+  installGithub: bridge.buildProvider<IBridgeResponse<{ pluginId: string }>, { repo: string; ref?: string }>('plugin:install-github'),
+  installLocal: bridge.buildProvider<IBridgeResponse<{ pluginId: string }>, { dirPath: string }>('plugin:install-local'),
+  uninstall: bridge.buildProvider<IBridgeResponse, string>('plugin:uninstall'),
+
+  // Lifecycle operations
+  activate: bridge.buildProvider<IBridgeResponse, string>('plugin:activate'),
+  deactivate: bridge.buildProvider<IBridgeResponse, string>('plugin:deactivate'),
+
+  // Settings & Permissions
+  updateSettings: bridge.buildProvider<IBridgeResponse, { pluginId: string; settings: Record<string, unknown> }>('plugin:update-settings'),
+  grantPermissions: bridge.buildProvider<IBridgeResponse, { pluginId: string; permissions: string[] }>('plugin:grant-permissions'),
+  revokePermissions: bridge.buildProvider<IBridgeResponse, { pluginId: string; permissions: string[] }>('plugin:revoke-permissions'),
+
+  // Updates
+  checkUpdates: bridge.buildProvider<IBridgeResponse<Array<{ pluginId: string; currentVersion: string; latestVersion: string }>>, void>('plugin:check-updates'),
+
+  // Events (main → renderer)
+  onActivated: bridge.buildEmitter<{ pluginId: string; builtin?: boolean }>('plugin:event:activated'),
+  onDeactivated: bridge.buildEmitter<{ pluginId: string }>('plugin:event:deactivated'),
+  onError: bridge.buildEmitter<{ pluginId: string; error: string }>('plugin:event:error'),
+};
+
 // 窗口控制相关接口 / Window controls API
 export const windowControls = {
   minimize: bridge.buildProvider<void, void>('window-controls:minimize'),

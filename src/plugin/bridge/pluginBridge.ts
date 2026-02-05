@@ -96,9 +96,9 @@ export function initPluginBridge(pluginManager: PluginManager): void {
 
   ipcMain.handle(
     PLUGIN_CHANNELS.INSTALL_NPM,
-    async (_, packageName: string, version?: string): Promise<BridgeResponse<{ pluginId: string }>> => {
+    async (_, params: { packageName: string; version?: string }): Promise<BridgeResponse<{ pluginId: string }>> => {
       try {
-        const result = await pluginManager.installFromNpm(packageName, version);
+        const result = await pluginManager.installFromNpm(params.packageName, params.version);
         if (!result.success) {
           return { success: false, error: result.error };
         }
@@ -111,9 +111,9 @@ export function initPluginBridge(pluginManager: PluginManager): void {
 
   ipcMain.handle(
     PLUGIN_CHANNELS.INSTALL_GITHUB,
-    async (_, repo: string, ref?: string): Promise<BridgeResponse<{ pluginId: string }>> => {
+    async (_, params: { repo: string; ref?: string }): Promise<BridgeResponse<{ pluginId: string }>> => {
       try {
-        const result = await pluginManager.installFromGithub(repo, ref);
+        const result = await pluginManager.installFromGithub(params.repo, params.ref);
         if (!result.success) {
           return { success: false, error: result.error };
         }
@@ -126,9 +126,9 @@ export function initPluginBridge(pluginManager: PluginManager): void {
 
   ipcMain.handle(
     PLUGIN_CHANNELS.INSTALL_LOCAL,
-    async (_, dirPath: string): Promise<BridgeResponse<{ pluginId: string }>> => {
+    async (_, params: { dirPath: string }): Promise<BridgeResponse<{ pluginId: string }>> => {
       try {
-        const result = await pluginManager.installFromLocal(dirPath);
+        const result = await pluginManager.installFromLocal(params.dirPath);
         if (!result.success) {
           return { success: false, error: result.error };
         }
@@ -178,9 +178,9 @@ export function initPluginBridge(pluginManager: PluginManager): void {
 
   ipcMain.handle(
     PLUGIN_CHANNELS.UPDATE_SETTINGS,
-    async (_, pluginId: string, settings: Record<string, unknown>): Promise<BridgeResponse> => {
+    async (_, params: { pluginId: string; settings: Record<string, unknown> }): Promise<BridgeResponse> => {
       try {
-        return await pluginManager.updatePluginSettings(pluginId, settings);
+        return await pluginManager.updatePluginSettings(params.pluginId, params.settings);
       } catch (err) {
         return { success: false, error: (err as Error).message };
       }
@@ -189,9 +189,9 @@ export function initPluginBridge(pluginManager: PluginManager): void {
 
   ipcMain.handle(
     PLUGIN_CHANNELS.GRANT_PERMISSIONS,
-    async (_, pluginId: string, permissions: PluginPermission[]): Promise<BridgeResponse> => {
+    async (_, params: { pluginId: string; permissions: PluginPermission[] }): Promise<BridgeResponse> => {
       try {
-        return await pluginManager.grantPermissions(pluginId, permissions);
+        return await pluginManager.grantPermissions(params.pluginId, params.permissions);
       } catch (err) {
         return { success: false, error: (err as Error).message };
       }
@@ -200,9 +200,9 @@ export function initPluginBridge(pluginManager: PluginManager): void {
 
   ipcMain.handle(
     PLUGIN_CHANNELS.REVOKE_PERMISSIONS,
-    async (_, pluginId: string, permissions: PluginPermission[]): Promise<BridgeResponse> => {
+    async (_, params: { pluginId: string; permissions: PluginPermission[] }): Promise<BridgeResponse> => {
       try {
-        return await pluginManager.revokePermissions(pluginId, permissions);
+        return await pluginManager.revokePermissions(params.pluginId, params.permissions);
       } catch (err) {
         return { success: false, error: (err as Error).message };
       }
